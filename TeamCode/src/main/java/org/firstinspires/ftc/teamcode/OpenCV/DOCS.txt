@@ -1,3 +1,5 @@
 OpenCV
 
 Author:
+
+~ Optimized OpenCV systems for object detection.
