@@ -1,0 +1,10 @@
+Sigmoid Drive
+
+Author: Pranav Dharanipathy
+
+~ Robot-centric drive
+~ Makes the relationship of the joystick to the robot's wheel power sigmoidal instead of linear,
+allowing for more smooth and controlled driving at lower speeds without minimizing speed or
+increasing latency at higher allowing for clean, controlled driving throughout the range, not only
+the lower or upper ranges.
+~ The sigmoid curve can be adjusted based on driver preference.
