@@ -1,0 +1,107 @@
+package org.firstinspires.ftc.teamcode.InverseKinematics;
+
+import androidx.annotation.NonNull;
+
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.hardware.CRServoImplEx;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.apache.commons.math3.util.FastMath;
+import org.firstinspires.ftc.teamcode.pedroPathing.DriveConstants;
+
+/// To be used for intaking large objects
+public class IntakeLarge {
+        Follower follower;
+        /// The large motor that will do the actual intaking of the object
+        CRServoImplEx largeServo;
+        DcMotorEx extendoLeft;
+        DcMotorEx extendoRight;
+        Gamepad gamepad;
+        IVKConstants IVKConstants = new IVKConstants();
+        /// The extendo will extend until it reaches this position
+        public double extendoTargetPosition = 0;
+
+        /// The pose at which the IVK(Inverse Kinematics) system is aiming at to intake the sample/object
+        Pose targetPose;
+        /**
+         * Creates a follower, and the extendo motors(the main motors, and the xy motors on the extendo wrist that pick up the sample)
+         * @Creation: ONLY TO BE CREATED AT THE START OF THE OpMode(During init()). DO NOT CREATE IN MIDDLE OF LOOP()
+         * @Functions: update(), intake(), extend(double targetPosition),  movePrecisely(double preciseMovementAngle)
+         *
+         * @Controls: right_bumper(Intake), left_bumper(Outtake)
+         *
+         * @Authored: 3/18/2026
+         */
+        public IntakeLarge(@NonNull HardwareMap hardwareMap, Gamepad gamepad1, Pose samplePose) {
+            /// Creates the follower used to gain the robot's pose data
+            follower = DriveConstants.createFollower(hardwareMap);
+
+            /// Initializes all the motors and devices needed for intake
+            largeServo = hardwareMap.get(CRServoImplEx.class, "extendo_intake");
+            extendoLeft = hardwareMap.get(DcMotorEx.class, "left_extendo");
+            extendoRight = hardwareMap.get(DcMotorEx.class, "right_extendo");
+            this.gamepad = gamepad1;
+            this.targetPose = samplePose;
+
+            /// Setting the motors to go to the target position(set in Motor.setTargetPosition(target))
+
+            extendoLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            extendoRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            /// Resetting motors for start of OpMode
+
+            largeServo.resetDeviceConfigurationForOpMode();
+            extendoLeft.resetDeviceConfigurationForOpMode();
+            extendoRight.resetDeviceConfigurationForOpMode();
+        }
+        /// Sets the extendo movement distance; the distance which both left_extendo and right_extendo will move to.
+        public void extend(double targetPosition) {
+
+            if (targetPosition > IVKConstants.maxExtendoPosition) {this.extendoTargetPosition = IVKConstants.maxExtendoPosition; gamepad.rumble(1200);}
+            else {this.extendoTargetPosition = targetPosition;}
+            //TODO: Set Extendo Motor Position
+
+        }
+
+        /// If the requested Angle is beyond the limits of the servo's movement range, it will be true, and intake() will be stopped
+
+        double deltaX =0;
+        double deltaY = 0;
+        Pose currentPose;
+        boolean isIntaking = false;
+        double robotHeadingInDegrees;
+        double robotHeadingInRadians;
+        public void update() {
+            currentPose = follower.getPose();
+
+            deltaX = (targetPose.getX()) - (currentPose.getX());
+            deltaY = (targetPose.getY()) - (currentPose.getY());
+
+            if (gamepad.right_bumper) {
+                robotHeadingInRadians = currentPose.getHeading();
+                intake();
+
+                isIntaking = true;
+                robotHeadingInDegrees = FastMath.toDegrees(robotHeadingInRadians);
+            }
+            while (isIntaking) {
+                follower.holdPoint(new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading()));
+            }
+        }
+        /// The combined angle of the robot heading and the angle between the robot and the sample/object.
+        double otherArea = 0;
+
+        /// The angle of the object relative to the robot's x-axis
+        double objectAngle = 0;
+
+        /// The Angle the precise motors(xMotor) needs to move in order to be right on top of the object(in degrees)
+        double preciseMovementAngle = 0;
+        public void intake() {
+                extend(Math.hypot(deltaX, deltaY));
+                // TODO: Set Power to the largeServo(CRServo) by using largeServo.setPower(1);
+        }
+    }

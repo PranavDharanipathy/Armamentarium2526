@@ -14,9 +14,9 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 import org.apache.commons.math3.util.FastMath;
 import org.firstinspires.ftc.teamcode.pedroPathing.DriveConstants;
 
-import kotlinx.coroutines.Delay;
 
-public class Intake {
+/// To be used for intaking small objects
+public class IntakePrecise {
     Follower follower;
 
     /// The precise motor that accounts for driver error(It will correct by moving to the position right above the sample/object)
@@ -37,17 +37,19 @@ public class Intake {
     Pose targetPose;
 
     /**
-     * Creates a follower, and the extendo motors(the main motors, and the xy motors on the extendo wrist that pick up the sample)
-     * @Creation: ONLY TO BE CREATED AT THE START OF THE OpMode(During init()). DO NOT CREATE IN MIDDLE OF LOOP()
-     * @Functions: update(), intake(), extend(double targetPosition),  movePrecisely(double preciseMovementAngle)
+     * Creates a follower, and the extendo motors(the main motors, and the xy motors on the extendo wrist that pick up the sample).
+     * @Creation: ONLY TO BE CREATED AT THE START OF THE OpMode(During init()). DO NOT CREATE IN MIDDLE OF LOOP().
+     * @Functions: update(), intake(), extend(double targetPosition),  movePrecisely(double preciseMovementAngle).
      *
-     * @Controls: right_bumper(Intake), left_bumper(Outtake)
+     * @Controls: right_bumper(Intake), left_bumper(Outtake).
      * 
      * @Authored: 3/18/2026
      */
-    public Intake(@NonNull HardwareMap hardwareMap, Gamepad gamepad, Pose samplePose) {
-        /// Creates the follower used to gain the robot's pose data
+    public IntakePrecise(@NonNull HardwareMap hardwareMap, Gamepad gamepad1, Pose startPose, Pose samplePose) {
+        /// Creates the follower used to gain the robot's pose data.
         follower = DriveConstants.createFollower(hardwareMap);
+        follower.setStartingPose(startPose);
+        follower.update();
 
         /// Initializes all the motors and devices needed for intake
         xMotor = hardwareMap.get(DcMotorEx.class, "extendo_xMotor");
@@ -55,16 +57,16 @@ public class Intake {
         extendoRight = hardwareMap.get(DcMotorEx.class, "right_extendo");
         wristServo = hardwareMap.get(ServoImplEx.class, "wrist_servo");
         claw = hardwareMap.get(Servo.class, "claw");
-        this.gamepad = gamepad;
+        this.gamepad = gamepad1;
         this.targetPose = samplePose;
 
-        /// Setting the motors to go to the target position(set in Motor.setTargetPosition(target))
+        /// Setting the motors to go to the target position(set in Motor.setTargetPosition(target)).
 
         xMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         extendoLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         extendoRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        /// Resetting motors for start of OpMode
+        /// Resetting motors for start of OpMode.
 
         xMotor.resetDeviceConfigurationForOpMode();
         extendoLeft.resetDeviceConfigurationForOpMode();
@@ -80,7 +82,7 @@ public class Intake {
         
     }
 
-    /// If the requested Angle is beyond the limits of the servo's movement range, it will be true, and intake() will be stopped
+    /// If the requested Angle is beyond the limits of the servo's movement range, it will be true, and intake() will be stopped.
     boolean nullPositionRequested = false;
 
     /// Sets the precise movement angle; the angle at which the precise motor(xMotor) will move to in order to pick up the sample.
@@ -109,14 +111,19 @@ public class Intake {
         while (isIntaking) {
             follower.holdPoint(new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading()));
         }
+
+        if (gamepad.right_bumper) {
+            extend(0.8);
+            //TODO: Add CRServo activation to outtake element;
+        }
     }
     /// The combined angle of the robot heading and the angle between the robot and the sample/object.
     double otherArea = 0;
 
-    /// The angle of the object relative to the robot's x-axis
+    /// The angle of the object relative to the robot's x-axis.
     double objectAngle = 0;
 
-    /// The Angle the precise motors(xMotor) needs to move in order to be right on top of the object(in degrees)
+    /// The Angle the precise motors(xMotor) needs to move in order to be right on top of the object(in degrees).
     double preciseMovementAngle = 0;
     public void intake() {
 
