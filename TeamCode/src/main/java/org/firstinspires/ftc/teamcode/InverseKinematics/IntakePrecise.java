@@ -60,11 +60,6 @@ public class IntakePrecise {
         this.gamepad = gamepad1;
         this.targetPose = samplePose;
 
-        /// Setting the motors to go to the target position(set in Motor.setTargetPosition(target)).
-
-        xMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        extendoLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        extendoRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         /// Resetting motors for start of OpMode.
 
@@ -73,6 +68,13 @@ public class IntakePrecise {
         extendoRight.resetDeviceConfigurationForOpMode();
         wristServo.resetDeviceConfigurationForOpMode();
         claw.resetDeviceConfigurationForOpMode();
+
+        
+        /// Setting the motors to go to the target position(set in Motor.setTargetPosition(target)).
+
+        xMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        extendoLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        extendoRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
     /// Sets the extendo movement distance; the distance which both left_extendo and right_extendo will move to.
     public void extend(double targetPosition) {
@@ -106,12 +108,13 @@ public class IntakePrecise {
             robotHeadingInRadians = currentPose.getHeading();
 
             
-            intake();
-
             isIntaking = true;
             robotHeadingInDegrees = FastMath.toDegrees(robotHeadingInRadians);
 
             robotHeadingInDegrees *= -1;
+            robotHeading -= 90;
+            intake();
+
         }
         while (isIntaking) {
             follower.holdPoint(new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading()));
@@ -135,7 +138,7 @@ public class IntakePrecise {
     
     public void intake() {
 
-        objectAngle = FastMath.atan2(deltaY, deltaX);
+        objectAngle = FastMath.toDegrees(FastMath.atan2(deltaY, deltaX));
         otherArea = 90 - objectAngle;
 
         preciseMovementAngle = otherArea - robotHeadingInDegrees;
@@ -147,6 +150,8 @@ public class IntakePrecise {
         else {
             extend(Math.hypot(deltaX, deltaY));
             movePrecisely(preciseMovementAngle);
+
+            isIntaking = false;
         }
     }
 }
