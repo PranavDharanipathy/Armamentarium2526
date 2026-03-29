@@ -76,10 +76,7 @@ public class IntakePrecise {
     }
     /// Sets the extendo movement distance; the distance which both left_extendo and right_extendo will move to.
     public void extend(double targetPosition) {
-
-        if (targetPosition > IVKConstants.maxExtendoPosition) {this.extendoTargetPosition = IVKConstants.maxExtendoPosition;}
-        else {this.extendoTargetPosition = targetPosition;}
-        
+            this.extendoTargetPosition = targetPosition;
     }
 
     /// If the requested Angle is beyond the limits of the servo's movement range, it will be true, and intake() will be stopped.
@@ -87,7 +84,11 @@ public class IntakePrecise {
 
     /// Sets the precise movement angle; the angle at which the precise motor(xMotor) will move to in order to pick up the sample.
     public void movePrecisely(double preciseMovementAngle) {
+        if (!nullPositionRequested) {
+            
         this.preciseMovementAngle = preciseMovementAngle;
+        }
+        
     }
     double deltaX =0;
     double deltaY = 0;
@@ -98,21 +99,25 @@ public class IntakePrecise {
     public void update() {
         currentPose = follower.getPose();
 
-        deltaX = (targetPose.getX()) - (currentPose.getX());
-        deltaY = (targetPose.getY()) - (currentPose.getY());
+        deltaX = (targetPose.getY()) - (currentPose.getY());
+        deltaY = (targetPose.getX()) - (currentPose.getX());
         
         if (gamepad.right_bumper) {
             robotHeadingInRadians = currentPose.getHeading();
+
+            
             intake();
 
             isIntaking = true;
             robotHeadingInDegrees = FastMath.toDegrees(robotHeadingInRadians);
+
+            robotHeadingInDegrees *= -1;
         }
         while (isIntaking) {
             follower.holdPoint(new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading()));
         }
 
-        if (gamepad.right_bumper) {
+        if (gamepad.left_bumper) {
             extend(0.8);
             //TODO: Add CRServo activation to outtake element;
         }
@@ -125,6 +130,9 @@ public class IntakePrecise {
 
     /// The Angle the precise motors(xMotor) needs to move in order to be right on top of the object(in degrees).
     double preciseMovementAngle = 0;
+
+
+    
     public void intake() {
 
         objectAngle = FastMath.atan2(deltaY, deltaX);
