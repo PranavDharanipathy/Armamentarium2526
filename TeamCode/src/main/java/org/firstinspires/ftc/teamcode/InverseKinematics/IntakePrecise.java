@@ -32,6 +32,8 @@ public class IntakePrecise {
     /// The extendo will extend until it reaches this position
     public double extendoTargetPosition = 0;
 
+    double ticksPerInch;
+
 
     /// The pose at which the IVK(Inverse Kinematics) system is aiming at to intake the sample/object
     Pose targetPose;
@@ -45,11 +47,12 @@ public class IntakePrecise {
      * 
      * @Authored: 3/18/2026
      */
-    public IntakePrecise(@NonNull HardwareMap hardwareMap, Gamepad gamepad1, Pose startPose, Pose samplePose) {
+    public IntakePrecise(@NonNull HardwareMap hardwareMap, Gamepad gamepad1, Pose startPose, Pose samplePose, double ticksPerInch) {
         /// Creates the follower used to gain the robot's pose data.
         follower = DriveConstants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
         follower.update();
+        this.ticksPerInch = ticksPerInch;
 
         /// Initializes all the motors and devices needed for intake
         xMotor = hardwareMap.get(DcMotorEx.class, "extendo_xMotor");
@@ -78,7 +81,7 @@ public class IntakePrecise {
     }
     /// Sets the extendo movement distance; the distance which both left_extendo and right_extendo will move to.
     public void extend(double targetPosition) {
-            this.extendoTargetPosition = targetPosition;
+            this.extendoTargetPosition = targetPosition * ticksPerInch;
     }
 
     /// If the requested Angle is beyond the limits of the servo's movement range, it will be true, and intake() will be stopped.
@@ -99,6 +102,8 @@ public class IntakePrecise {
     double robotHeadingInDegrees;
     double robotHeadingInRadians;
     public void update() {
+
+        follower.update();
         currentPose = follower.getPose();
 
         deltaX = (targetPose.getY()) - (currentPose.getY());
@@ -112,11 +117,11 @@ public class IntakePrecise {
             robotHeadingInDegrees = FastMath.toDegrees(robotHeadingInRadians);
 
             robotHeadingInDegrees *= -1;
-            robotHeading -= 90;
+            robotHeadingInDegrees -= 90;
             intake();
 
         }
-        while (isIntaking) {
+        if (isIntaking) {
             follower.holdPoint(new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading()));
         }
 
@@ -146,6 +151,7 @@ public class IntakePrecise {
         if (preciseMovementAngle < IVKConstants.minPrecisePosition || preciseMovementAngle > IVKConstants.maxPrecisePosition) {
             nullPositionRequested = true;
             gamepad.rumble(1200);
+            isIntaking = false;
         }
         else {
             extend(Math.hypot(deltaX, deltaY));
