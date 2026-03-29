@@ -24,9 +24,9 @@ public class IntakePrecise {
     DcMotorEx extendoLeft;
     DcMotorEx extendoRight;
     Gamepad gamepad;
-    IVKConstants IVKConstants = new IVKConstants();
 
-    Servo claw;
+    ServoImplEx armServo;
+
     ServoImplEx wristServo;
 
     /// The extendo will extend until it reaches this position
@@ -59,25 +59,23 @@ public class IntakePrecise {
         extendoLeft = hardwareMap.get(DcMotorEx.class, "left_extendo");
         extendoRight = hardwareMap.get(DcMotorEx.class, "right_extendo");
         wristServo = hardwareMap.get(ServoImplEx.class, "wrist_servo");
-        claw = hardwareMap.get(Servo.class, "claw");
         this.gamepad = gamepad1;
         this.targetPose = samplePose;
+        armServo = hardwareMap.get(ServoImplEx.class, "arm_servo");
 
 
         /// Resetting motors for start of OpMode.
 
-        xMotor.resetDeviceConfigurationForOpMode();
+       /* xMotor.resetDeviceConfigurationForOpMode();
         extendoLeft.resetDeviceConfigurationForOpMode();
         extendoRight.resetDeviceConfigurationForOpMode();
-        wristServo.resetDeviceConfigurationForOpMode();
-        claw.resetDeviceConfigurationForOpMode();
-
+        wristServo.resetDeviceConfigurationForOpMode(); */
         
         /// Setting the motors to go to the target position(set in Motor.setTargetPosition(target)).
 
-        xMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+       /* xMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         extendoLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        extendoRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        extendoRight.setMode(DcMotor.RunMode.RUN_TO_POSITION); */
     }
     /// Sets the extendo movement distance; the distance which both left_extendo and right_extendo will move to.
     public void extend(double targetPosition) {
@@ -94,6 +92,14 @@ public class IntakePrecise {
         this.preciseMovementAngle = preciseMovementAngle;
         }
         
+    }
+
+
+
+    public void moveArm() {
+        ///  Un-Comment this code to use
+
+        //armServo.setPosition(IVKConstants.armServoPivot);
     }
     double deltaX =0;
     double deltaY = 0;
